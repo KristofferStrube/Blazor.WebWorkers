@@ -20,6 +20,12 @@ jobs:
           with:
             dotnet-version: '8.0.x'
             include-prerelease: true
+            
+        # Add wasm-tools workload
+        - name: Add wasm-tools Workload
+          run: |
+            dotnet workload install wasm-tools
+            dotnet workload restore
 
         # Generate the website
         - name: Publish
