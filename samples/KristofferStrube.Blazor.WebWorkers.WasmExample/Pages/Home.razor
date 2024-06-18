@@ -1,0 +1,154 @@
+﻿@page "/"
+@using KristofferStrube.Blazor.DOM
+@using KristofferStrube.Blazor.Window
+@using KristofferStrube.Blazor.WebWorkers.StringSumWorker
+@using System.Text.Json
+@using System.Diagnostics
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Blazor.Worker</PageTitle>
+
+<h1>Blazor.Worker</h1>
+
+<p>
+    We can create a <code>Worker</code> either from some JS script or with a little abstraction from a .NET project.
+    We can communicate with this worker by posting messages to it and listen to events from it.
+</p>
+
+<p>
+    In JS we have implemented a method that takes the sum of the characters in a string:
+    <br />
+    <pre class="code-block">
+    <code>function work(input) {
+    let result = 0;
+    for (let i = 0; i &lt; input.length; i++) {
+        result += input.charCodeAt(i);
+    }
+    return result;
+}</code>
+    </pre>
+    <br />
+    And in .NET we have implemented the same method:
+    <br />
+    <pre class="code-block">
+    <code>public override int Work(string input)
+{
+    int result = 0;
+    for (int i = 0; i &lt; input.Length; i++)
+    {
+        result += input[i];
+    }
+    return result;
+}</code>
+    </pre>
+    <br />
+    And here we can then try to call these methods in workers (separate threads) either in a JS worker or a .NET worker.
+</p>
+
+<label for="input">Input string:</label>
+<input id="input" @bind=input />
+@if (result is not null)
+{
+    <text>&nbsp;</text>
+    <span class="badge bg-success">@result</span>
+    <text>&nbsp;</text>
+    <small>in @time milliseconds</small>
+}
+<br />
+<br />
+
+<button class="btn btn-primary" @onclick=CreateWorkerFromJSScript>Get sum of character codes in string with JS Worker</button>
+<br />
+<br />
+<button class="btn btn-primary" @onclick=CreateWorkerFromNetJob>Get sum of character codes in string with .NET Worker</button>
+
+<br />
+<br />
+
+<p>
+    The .NET used code for invoking the JS worker:<br />
+<pre class="code-block">
+<code>var jsWorker = await Worker.CreateAsync(JSRuntime, "stringSumWorker.js");
+
+EventListener&lt;MessageEvent> eventListener = default!;
+eventListener = await EventListener&lt;MessageEvent>.CreateAsync(JSRuntime, async e =>
+{
+    await jsWorker.RemoveOnMessageEventListenerAsync(eventListener);
+    await eventListener.DisposeAsync();
+
+    result = await e.GetDataAsync&lt;int>();
+    StateHasChanged();
+});
+
+await jsWorker.AddOnMessageEventListenerAsync(eventListener);
+await jsWorker.PostMessageAsync(input);</code>
+</pre>
+    <br />
+    The .NET code for invoking the .NET worker:<br />
+<pre class="code-block">
+<code>var dotNetWorker = await JobWorker&lt;string, int, StringSumJob>.CreateAsync(JSRuntime);
+
+result = await dotNetWorker.ExecuteAsync(input);</code>
+</pre>
+
+</p>
+
+@code {
+    string input = "Hello World!";
+    int? result = null;
+    double time;
+    Worker? jsWorker;
+    JobWorker<string, int, StringSumJob>? dotNetWorker;
+
+    public async Task CreateWorkerFromJSScript()
+    {
+        result = null;
+        StateHasChanged();
+        var start = Stopwatch.GetTimestamp();
+
+        if (jsWorker is null)
+            jsWorker = await Worker.CreateAsync(JSRuntime, "stringSumWorker.js");
+
+        EventListener<MessageEvent> eventListener = default!;
+        eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
+        {
+            await jsWorker.RemoveOnMessageEventListenerAsync(eventListener);
+            await eventListener.DisposeAsync();
+
+            result = await e.GetDataAsync<int>();
+            time = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
+            StateHasChanged();
+        });
+
+        await jsWorker.AddOnMessageEventListenerAsync(eventListener);
+
+        await jsWorker.PostMessageAsync(input);
+    }
+
+    public async Task CreateWorkerFromNetJob()
+    {
+        result = null;
+        StateHasChanged();
+        var start = Stopwatch.GetTimestamp();
+
+        if (dotNetWorker is null)
+            dotNetWorker = await JobWorker<string, int, StringSumJob>.CreateAsync(JSRuntime);
+
+        result = await dotNetWorker.ExecuteAsync(input);
+        time = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsWorker is not null)
+        {
+            await jsWorker.DisposeAsync();
+        }
+        if (dotNetWorker is not null)
+        {
+            await dotNetWorker.DisposeAsync();
+        }
+    }
+}
