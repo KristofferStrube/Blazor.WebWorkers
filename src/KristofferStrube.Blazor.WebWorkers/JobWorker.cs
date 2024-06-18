@@ -16,7 +16,7 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
     {
         await using IJSObjectReference helper = await jSRuntime.GetHelperAsync();
         IJSObjectReference jSInstance = await helper.InvokeAsync<IJSObjectReference>("constructWorker",
-            "_content/KristofferStrube.Blazor.Worker/KristofferStrube.Blazor.WebWorkers.JobWorker.js",
+            "_content/KristofferStrube.Blazor.WebWorkers/KristofferStrube.Blazor.WebWorkers.JobWorker.js",
             new WorkerOptions() { Type = WorkerType.Module });
 
         return new JobWorker<TInput, TOutput, TJob>(jSRuntime, jSInstance, new() { DisposesJSReference = true });
