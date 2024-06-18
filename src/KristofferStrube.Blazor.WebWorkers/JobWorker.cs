@@ -39,7 +39,7 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
             await eventListener.DisposeAsync();
 
             JSONJob<object, object>.JobResponse response = await e.GetDataAsync<JSONJob<object, object>.JobResponse>();
-            if (pendingTasks.Remove(response.RequestIdentifier, out var successTaskCompletionSource))
+            if (pendingTasks.Remove(response.RequestIdentifier, out TaskCompletionSource<TOutput> successTaskCompletionSource))
             {
                 successTaskCompletionSource.SetResult(JsonSerializer.Deserialize<TOutput>(response.OutputSerialized)!);
             }
