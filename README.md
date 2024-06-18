@@ -6,7 +6,7 @@
 
 # Blazor.WebWorkers
 A Blazor wrapper for the [Web Workers part of the HTML API.](https://html.spec.whatwg.org/multipage/workers.html)
-The API defines way to run scripts in the background independently of any user interface scripts or rendering. This allows for long-running scripts that are not interrupted by scripts that respond to clicks or other user interactions, and allows long tasks to be executed without yielding to keep the page responsive. This project implements a wrapper around the API for Blazor so that we can easily and safely create workers.
+The API defines ways to run scripts in the background independently of any the primary thread. This allows for long-running scripts that are not interrupted by scripts that respond to clicks or other user interactions, and allows long tasks to be executed without yielding to keep the page responsive. This project implements a wrapper around the API for Blazor so that we can easily and safely create workers.
 
 **This wrapper is still just an experiment.**
 
