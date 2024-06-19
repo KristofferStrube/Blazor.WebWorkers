@@ -39,36 +39,79 @@ So to get started you really only need to *create a new console project* and the
 ```
 And then you can do whatever you want in the `Program.cs` file, but I've added some helpers that make it easier to communicate with the main window and create objects.
 
+Here I have an example of the code needed for a simple pong worker that broadcasts when it is ready to listen for a ping, responds with a pong when it receives that, and then shuts down.
+
 ```csharp
 using KristofferStrube.Blazor.WebWorkers;
-using System.Runtime.InteropServices.JavaScript;
 
 if (!OperatingSystem.IsBrowser())
     throw new PlatformNotSupportedException("Can only be run in the browser!");
 
 Console.WriteLine("Hey this is running on another thread!");
 
+bool keepRunning = true;
+
+if (args.Length >= 1)
+{
+    Console.WriteLine($"The worker was initialized with arguments: [{string.Join(", ", args)}]");
+}
+
 // This is a helper for listening on messages.
 Imports.RegisterOnMessage(e =>
 {
-    string type = e.GetPropertyAsString("type");
-    if (type == "ping")
+    // If we receive a "ping", respond with "pong".
+    if (e.GetTypeOfProperty("data") == "string" && e.GetPropertyAsString("data") == "ping")
     {
-        // Another helper for creating an object.
-        JSObject pong = Imports.CreateObject();
-        pong.SetProperty("type", "pong");
-
-        // And a helper for posting a message and disposing it afterward.
-        Imports.PostMessage(pong);
-        Imports.DisposeObject(pong);
+        // Helper for posting a message.
+        Console.WriteLine("Received ping; Sending pong!");
+        Imports.PostMessage("pong");
+        keepRunning = false;
     }
 });
 
-while (true)
+Console.WriteLine("We are now listening for messages.");
+Imports.PostMessage("ready");
+
+// We run forever to keep it alive.
+while (keepRunning)
     await Task.Delay(100);
+
+Console.WriteLine("Worker done, so stopping!");
 ```
 
-And with very little extra setup we can start this and post a message to it. -- WIP --
+And with very little extra setup we can start this and post a message to it once it is ready. For this we use a very simple abstraction over the worker that enable us to specify an assembly name and some arguments for the worker.
+
+```csharp
+SlimWorker slimWorker = await SlimWorker.CreateAsync(
+    jSRuntime: JSRuntime,
+    assembly: typeof(AssemblyPongWorker).Assembly.GetName().Name!,
+    ["Argument1", "Argument2"]
+);
+
+EventListener<MessageEvent> eventListener = default!;
+eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
+{
+    object? data = await e.Data.GetValueAsync();
+    switch (data)
+    {
+        case "ready":
+            Log("We are sending a ping!");
+            await slimWorker.PostMessageAsync("ping");
+            break;
+        case "pong":
+            Log("We received a pong!");
+            await slimWorker.RemoveOnMessageEventListenerAsync(eventListener);
+            await eventListener.DisposeAsync();
+            await slimWorker.DisposeAsync();
+            break;
+    }
+});
+await slimWorker.AddOnMessageEventListenerAsync(eventListener);
+```
+This looks like so:
+
+![ping pong demo](./docs/ping-pong.gif?raw=true)
+
 
 # Related repositories
 The library uses the following other packages to support its features:

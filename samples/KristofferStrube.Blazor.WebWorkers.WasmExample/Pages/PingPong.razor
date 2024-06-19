@@ -1,0 +1,62 @@
+﻿@page "/PingPong"
+@using KristofferStrube.Blazor.DOM
+@using KristofferStrube.Blazor.WebWorkers.PongWorker
+@using KristofferStrube.Blazor.Window
+@using System.Text.Json
+@using System.Diagnostics
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Blazor.WebWorkers - Ping Pong</PageTitle>
+
+<h1>Ping Pong</h1>
+
+<p>
+    Here we use the most barebone abstraction we have for starting a .NET worker called the <code>SlimWorker</code>.
+    It enables us to configure the absolute minimum to start a .NET worker which is the name of the assembly and the arguments we will parse to that program.
+    <br />
+    Here we have made a worker project that listens for a message and if the message is a <code>"ping"</code>, then responds with a <code>"pong"</code> message whic we listen for.
+</p>
+
+<button class="btn btn-primary" @onclick=CreatePongWorker>Create worker and send ping to it.</button>
+<br />
+<br />
+<textarea style="width:100%;height:40vh" disabled>@log</textarea>
+
+@code {
+    string log = "";
+
+    public async Task CreatePongWorker()
+    {
+SlimWorker slimWorker = await SlimWorker.CreateAsync(
+    jSRuntime: JSRuntime,
+    assembly: typeof(AssemblyPongWorker).Assembly.GetName().Name!,
+    ["Argument1", "Argument2"]
+);
+
+EventListener<MessageEvent> eventListener = default!;
+eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
+{
+    object? data = await e.Data.GetValueAsync();
+    switch (data)
+    {
+        case "ready":
+            Log("We are sending a ping!");
+            await slimWorker.PostMessageAsync("ping");
+            break;
+        case "pong":
+            Log("We received a pong!");
+            await slimWorker.RemoveOnMessageEventListenerAsync(eventListener);
+            await eventListener.DisposeAsync();
+            await slimWorker.DisposeAsync();
+            break;
+    }
+});
+await slimWorker.AddOnMessageEventListenerAsync(eventListener);
+    }
+
+    private void Log(string message)
+    {
+        log += $"{DateTime.UtcNow.ToLongTimeString()}: {message}\n";
+        StateHasChanged();
+    }
+}

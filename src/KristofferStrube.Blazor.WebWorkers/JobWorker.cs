@@ -12,6 +12,11 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks = new();
 
+    /// <summary>
+    /// Creates a <see cref="JobWorker<TInput, TOutput, TJob>"/> that can execute some specific <see cref="TJob"/> on a worker thread.
+    /// </summary>
+    /// <param name="jSRuntime">An <see cref="IJSRuntime"/> instance.</param>
+    /// <returns></returns>
     public static new async Task<JobWorker<TInput, TOutput, TJob>> CreateAsync(IJSRuntime jSRuntime)
     {
         await using IJSObjectReference helper = await jSRuntime.GetHelperAsync();
@@ -22,7 +27,7 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
         return new JobWorker<TInput, TOutput, TJob>(jSRuntime, jSInstance, new() { DisposesJSReference = true });
     }
 
-    protected internal JobWorker(IJSRuntime jSRuntime, IJSObjectReference jSReference, CreationOptions options) : base(jSRuntime, jSReference, options)
+    protected JobWorker(IJSRuntime jSRuntime, IJSObjectReference jSReference, CreationOptions options) : base(jSRuntime, jSReference, options)
     {
     }
 
@@ -49,7 +54,7 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
 
         await PostMessageAsync(new JSONJob<object, object>.JobArguments()
         {
-            Namespace = typeof(TJob).Namespace!,
+            Namespace = typeof(TJob).Assembly.GetName().Name!,
             Type = typeof(TJob).Name,
             RequestIdentifier = requestIdentifier,
             InputSerialized = JsonSerializer.Serialize(input)

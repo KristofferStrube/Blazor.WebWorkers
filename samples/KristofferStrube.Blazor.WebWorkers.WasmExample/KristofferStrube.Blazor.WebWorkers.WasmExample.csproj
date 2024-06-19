@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\KristofferStrube.Blazor.WebWorkers\KristofferStrube.Blazor.WebWorkers.csproj" />
+    <ProjectReference Include="..\KristofferStrube.Blazor.WebWorkers.PongWorker\KristofferStrube.Blazor.WebWorkers.PongWorker.csproj" />
     <ProjectReference Include="..\KristofferStrube.Blazor.WebWorkers.StringSumWorker\KristofferStrube.Blazor.WebWorkers.StringSumWorker.csproj" />
   </ItemGroup>
 
