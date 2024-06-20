@@ -1,6 +1,6 @@
 ﻿namespace KristofferStrube.Blazor.WebWorkers.StringSumWorker;
 
-public class StringSumJob : JSONJob<string, int>
+public class StringSumJob : JsonJob<string, int>
 {
     public override int Work(string input)
     {

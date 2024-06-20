@@ -15,7 +15,8 @@ The sample project can be demoed at https://kristofferstrube.github.io/Blazor.We
 
 On each page, you can find the corresponding code for the example in the top right corner.
 
-# Approach
+# Getting Started
+
 Many others like [Tewr/BlazorWorker](https://github.com/Tewr/BlazorWorker) and [LostBeard/SpawnDev.BlazorJS](https://github.com/LostBeard/SpawnDev.BlazorJS) have made libraries like this before. This project differs a bit from the other projects by utilizing [the wasm-experimental workload](https://devblogs.microsoft.com/dotnet/use-net-7-from-any-javascript-app-in-net-7/). This simplifies the code needed for this to work a lot. The catch to this is that you will need to have the code for your workers in another project. For me this is not only a negative as it also makes it very clear that they do not share memory and that they run in separate contexts, similar to how the *Blazor WASM* project is separate in a *Blazor WebApp*.
 
 So to get started you really only need to *create a new console project* and then make a few adjustments to the `.csproj`. In the end it should look something like this:
@@ -38,6 +39,8 @@ So to get started you really only need to *create a new console project* and the
 </Project>
 ```
 And then you can do whatever you want in the `Program.cs` file, but I've added some helpers that make it easier to communicate with the main window and create objects.
+
+## SlimWorker
 
 Here I have an example of the code needed for a simple pong worker that broadcasts when it is ready to listen for a ping, responds with a pong when it receives that, and then shuts down.
 
@@ -111,6 +114,48 @@ await slimWorker.AddOnMessageEventListenerAsync(eventListener);
 This looks like so:
 
 ![ping pong demo](./docs/ping-pong.gif?raw=true)
+
+## JobWorker
+
+Another more basic abstraction is the `JobWorker`. This simple abstraction runs some job with an input and an output on a worker. The `.csproj` look identical to the one used for the `SlimWorker`.
+
+But what differs is that we need to create a class that implements the interface `Job<TInput, TOutput>` in the worker project. A simple way to do this is by extending the abstract class `JsonJob` which uses JSON as the format for transfering its input and output. This limits us to only use inputs and outputs that can be JSON serialized and deserialized.
+
+Here were implement a job that can find the sum of the codes of each individual char in a string.
+
+```csharp
+public class StringSumJob : JsonJob<string, int>
+{
+    public override int Work(string input)
+    {
+        int result = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            result += input[i];
+        }
+        return result;
+    }
+}
+```
+
+Then we need to replace the content of the `Program.cs` in the worker project with the following to instantiate the job.
+
+```csharp
+if (!OperatingSystem.IsBrowser())
+    throw new PlatformNotSupportedException("Can only be run in the browser!");
+
+new StringSumJob().Execute(args);
+```
+
+Finally to call the worker from our main Blazor program we only need the following.
+
+```csharp
+var jobWorker = await JobWorker<string, int, StringSumJob>.CreateAsync(JSRuntime);
+
+int result = await jobWorker.ExecuteAsync(input);
+```
+
+We can create the `JobWorker` a single time and then run it multiple times with different inputs. Doing this spares us from importing the needed WASM assemblies multiple times which can make consecutive runs much faster.
 
 
 # Related repositories

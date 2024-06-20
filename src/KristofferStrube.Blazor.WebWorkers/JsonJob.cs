@@ -1,10 +1,13 @@
-﻿using System.Runtime.Versioning;
+﻿using KristofferStrube.Blazor.DOM;
+using KristofferStrube.Blazor.Window;
+using System.Collections.Concurrent;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
-public abstract class JSONJob<TInput, TOutput>
+public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
 {
     /// <summary>
     /// The actual work being done by the job. This will be run when the job is executed.
@@ -26,6 +29,41 @@ public abstract class JSONJob<TInput, TOutput>
         TOutput outputSerializedAndDeserialized = JsonSerializer.Deserialize<TOutput>(JsonSerializer.Serialize(output))!;
 
         return outputSerializedAndDeserialized;
+    }
+
+    /// <summary>
+    /// How an input is transfered to the <see cref="JobWorker{TInput, TOutput, TJob}"/> for the <see cref="JsonJob{TInput, TOutput}"/>.
+    /// </summary>
+    public static async Task<TOutput> ExecuteAsync<TJob>(TInput input, Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks) where TJob : Job<TInput, TOutput>
+    {
+        string requestIdentifier = Guid.NewGuid().ToString();
+        var tcs = new TaskCompletionSource<TOutput>();
+        pendingTasks[requestIdentifier] = tcs;
+
+        EventListener<MessageEvent> eventListener = default!;
+        eventListener = await EventListener<MessageEvent>.CreateAsync(worker.JSRuntime, async e =>
+        {
+            await worker.RemoveOnMessageEventListenerAsync(eventListener);
+            await eventListener.DisposeAsync();
+
+            JobResponse response = await e.GetDataAsync<JobResponse>();
+            if (pendingTasks.Remove(response.RequestIdentifier, out TaskCompletionSource<TOutput>? successTaskCompletionSource))
+            {
+                successTaskCompletionSource.SetResult(JsonSerializer.Deserialize<TOutput>(response.OutputSerialized)!);
+            }
+        });
+
+        await worker.AddOnMessageEventListenerAsync(eventListener);
+
+        await worker.PostMessageAsync(new JobArguments()
+        {
+            Namespace = typeof(TJob).Assembly.GetName().Name!,
+            Type = typeof(TJob).Name,
+            RequestIdentifier = requestIdentifier,
+            InputSerialized = JsonSerializer.Serialize(input)
+        });
+
+        return await tcs.Task;
     }
 
     /// <summary>

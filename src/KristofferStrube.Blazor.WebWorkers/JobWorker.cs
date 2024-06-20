@@ -1,22 +1,18 @@
-﻿using KristofferStrube.Blazor.DOM;
-using KristofferStrube.Blazor.WebIDL;
+﻿using KristofferStrube.Blazor.WebIDL;
 using KristofferStrube.Blazor.WebWorkers.Extensions;
-using KristofferStrube.Blazor.Window;
 using Microsoft.JSInterop;
 using System.Collections.Concurrent;
-using System.Text.Json;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
-public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInput, TOutput>
+public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : Job<TInput, TOutput>
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks = new();
 
     /// <summary>
-    /// Creates a <see cref="JobWorker<TInput, TOutput, TJob>"/> that can execute some specific <see cref="TJob"/> on a worker thread.
+    /// Creates a <see cref="JobWorker{TInput, TOutput, TJob}"/> that can execute some specific <see cref="TJob"/> on a worker thread.
     /// </summary>
     /// <param name="jSRuntime">An <see cref="IJSRuntime"/> instance.</param>
-    /// <returns></returns>
     public static new async Task<JobWorker<TInput, TOutput, TJob>> CreateAsync(IJSRuntime jSRuntime)
     {
         await using IJSObjectReference helper = await jSRuntime.GetHelperAsync();
@@ -33,33 +29,6 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : JSONJob<TInp
 
     public async Task<TOutput> ExecuteAsync(TInput input)
     {
-        string requestIdentifier = Guid.NewGuid().ToString();
-        var tcs = new TaskCompletionSource<TOutput>();
-        pendingTasks[requestIdentifier] = tcs;
-
-        EventListener<MessageEvent> eventListener = default!;
-        eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
-        {
-            await RemoveOnMessageEventListenerAsync(eventListener);
-            await eventListener.DisposeAsync();
-
-            JSONJob<object, object>.JobResponse response = await e.GetDataAsync<JSONJob<object, object>.JobResponse>();
-            if (pendingTasks.Remove(response.RequestIdentifier, out TaskCompletionSource<TOutput> successTaskCompletionSource))
-            {
-                successTaskCompletionSource.SetResult(JsonSerializer.Deserialize<TOutput>(response.OutputSerialized)!);
-            }
-        });
-
-        await AddOnMessageEventListenerAsync(eventListener);
-
-        await PostMessageAsync(new JSONJob<object, object>.JobArguments()
-        {
-            Namespace = typeof(TJob).Assembly.GetName().Name!,
-            Type = typeof(TJob).Name,
-            RequestIdentifier = requestIdentifier,
-            InputSerialized = JsonSerializer.Serialize(input)
-        });
-
-        return await tcs.Task;
+        return await TJob.ExecuteAsync<TJob>(input, this, pendingTasks);
     }
 }
