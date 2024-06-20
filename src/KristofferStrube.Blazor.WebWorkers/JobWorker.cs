@@ -5,12 +5,18 @@ using System.Collections.Concurrent;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
+/// <summary>
+/// A <see cref="Worker"/> that can execute some specific <typeparamref name="TJob"/> on a worker thread.
+/// </summary>
+/// <typeparam name="TInput"></typeparam>
+/// <typeparam name="TOutput"></typeparam>
+/// <typeparam name="TJob"></typeparam>
 public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : Job<TInput, TOutput>
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks = new();
 
     /// <summary>
-    /// Creates a <see cref="JobWorker{TInput, TOutput, TJob}"/> that can execute some specific <see cref="TJob"/> on a worker thread.
+    /// Creates a <see cref="JobWorker{TInput, TOutput, TJob}"/> that can execute some specific <typeparamref name="TJob"/> on a worker thread.
     /// </summary>
     /// <param name="jSRuntime">An <see cref="IJSRuntime"/> instance.</param>
     public static new async Task<JobWorker<TInput, TOutput, TJob>> CreateAsync(IJSRuntime jSRuntime)
@@ -23,10 +29,16 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : Job<TInput, 
         return new JobWorker<TInput, TOutput, TJob>(jSRuntime, jSInstance, new() { DisposesJSReference = true });
     }
 
+    /// <inheritdoc cref="Worker(IJSRuntime, IJSObjectReference, CreationOptions)"/>
     protected JobWorker(IJSRuntime jSRuntime, IJSObjectReference jSReference, CreationOptions options) : base(jSRuntime, jSReference, options)
     {
     }
 
+    /// <summary>
+    /// Executes the job on the worker.
+    /// </summary>
+    /// <param name="input">The input to the job.</param>
+    /// <returns>The output of the job.</returns>
     public async Task<TOutput> ExecuteAsync(TInput input)
     {
         return await TJob.ExecuteAsync<TJob>(input, this, pendingTasks);

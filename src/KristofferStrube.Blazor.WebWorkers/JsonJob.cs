@@ -7,6 +7,11 @@ using System.Text.Json.Serialization;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
+/// <summary>
+/// A job that uses JSON as its serialization mechanism for the input and output.
+/// </summary>
+/// <typeparam name="TInput"></typeparam>
+/// <typeparam name="TOutput"></typeparam>
 public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
 {
     /// <summary>
@@ -103,6 +108,7 @@ public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
     /// Posts the output.
     /// </summary>
     /// <param name="output">The output serialized.</param>
+    /// <param name="requestIdentifier">The <see cref="JobResponse.RequestIdentifier"/>.</param>
     [SupportedOSPlatform("browser")]
     private void PostOutput(string output, string requestIdentifier)
     {
@@ -115,29 +121,56 @@ public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
         Imports.PostMessage(outputObject);
     }
 
+    /// <summary>
+    /// The arguments that are parsed to the job.
+    /// </summary>
     public class JobArguments
     {
+        /// <summary>
+        /// The namespace of the job.
+        /// </summary>
         [JsonPropertyName("namespace")]
         public required string Namespace { get; set; }
 
+        /// <summary>
+        /// The type of the job. Used to ensure that the correct job is run.
+        /// </summary>
         [JsonPropertyName("type")]
         public required string Type { get; set; }
 
+        /// <summary>
+        /// The unique identifier for the specific request. Used to identify which task has finished when the job responds.
+        /// </summary>
         [JsonPropertyName("requestIdentifier")]
         public required string RequestIdentifier { get; set; }
 
+        /// <summary>
+        /// The input serialized to JSON.
+        /// </summary>
         [JsonPropertyName("inputSerialized")]
         public required string InputSerialized { get; set; }
     }
 
+    /// <summary>
+    /// The format of the respond.
+    /// </summary>
     public class JobResponse
     {
+        /// <summary>
+        /// The type of the job that ran.
+        /// </summary>
         [JsonPropertyName("type")]
         public required string Type { get; set; }
 
+        /// <summary>
+        /// The same unique identifier sent in <see cref="JobArguments.RequestIdentifier"/>.
+        /// </summary>
         [JsonPropertyName("requestIdentifier")]
         public required string RequestIdentifier { get; set; }
 
+        /// <summary>
+        /// The output serialized to JSON.
+        /// </summary>
         [JsonPropertyName("outputSerialized")]
         public required string OutputSerialized { get; set; }
     }

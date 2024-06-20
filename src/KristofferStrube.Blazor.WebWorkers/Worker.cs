@@ -43,7 +43,8 @@ public class Worker : EventTarget, IJSCreatable<Worker>
         return new Worker(jSRuntime, jSInstance, new() { DisposesJSReference = true });
     }
 
-    protected internal Worker(IJSRuntime jSRuntime, IJSObjectReference jSReference, CreationOptions options) : base(jSRuntime, jSReference, options)
+    /// <inheritdoc cref="CreateAsync(IJSRuntime, IJSObjectReference, CreationOptions)"/>
+    protected Worker(IJSRuntime jSRuntime, IJSObjectReference jSReference, CreationOptions options) : base(jSRuntime, jSReference, options)
     {
         workerHelperTask = new(jSRuntime.GetHelperAsync);
     }
