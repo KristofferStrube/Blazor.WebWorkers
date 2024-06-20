@@ -12,7 +12,7 @@ namespace KristofferStrube.Blazor.WebWorkers;
 /// </summary>
 /// <typeparam name="TInput"></typeparam>
 /// <typeparam name="TOutput"></typeparam>
-public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
+public abstract class JsonJob<TInput, TOutput> : IJob<TInput, TOutput>
 {
     /// <summary>
     /// The actual work being done by the job. This will be run when the job is executed.
@@ -39,7 +39,7 @@ public abstract class JsonJob<TInput, TOutput> : Job<TInput, TOutput>
     /// <summary>
     /// How an input is transfered to the <see cref="JobWorker{TInput, TOutput, TJob}"/> for the <see cref="JsonJob{TInput, TOutput}"/>.
     /// </summary>
-    public static async Task<TOutput> ExecuteAsync<TJob>(TInput input, Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks) where TJob : Job<TInput, TOutput>
+    public static async Task<TOutput> ExecuteAsync<TJob>(TInput input, Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks) where TJob : IJob<TInput, TOutput>
     {
         string requestIdentifier = Guid.NewGuid().ToString();
         var tcs = new TaskCompletionSource<TOutput>();

@@ -119,7 +119,7 @@ This looks like so:
 
 Another more basic abstraction is the `JobWorker`. This simple abstraction runs some job with an input and an output on a worker. The `.csproj` look identical to the one used for the `SlimWorker`.
 
-But what differs is that we need to create a class that implements the interface `Job<TInput, TOutput>` in the worker project. A simple way to do this is by extending the abstract class `JsonJob` which uses JSON as the format for transfering its input and output. This limits us to only use inputs and outputs that can be JSON serialized and deserialized.
+But what differs is that we need to create a class that implements the interface `IJob<TInput, TOutput>` in the worker project. A simple way to do this is by extending the abstract class `JsonJob` which uses JSON as the format for transfering its input and output. This limits us to only use inputs and outputs that can be JSON serialized and deserialized.
 
 Here were implement a job that can find the sum of the codes of each individual char in a string.
 

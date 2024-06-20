@@ -18,7 +18,7 @@ public class SlimWorker : Worker
     /// <param name="args">The args to parse to the program in the specified assembly when running it.</param>
     public static async Task<SlimWorker> CreateAsync(IJSRuntime jSRuntime, string assembly, string[]? args = null)
     {
-        args ??= Array.Empty<string>();
+        args ??= [];
 
         string scriptUrl = "_content/KristofferStrube.Blazor.WebWorkers/KristofferStrube.Blazor.WebWorkers.SlimWorker.js"
             + $"?assembly={assembly}"
