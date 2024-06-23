@@ -1,9 +1,7 @@
-﻿// Save messages while dotnet is being instantiated.
-let savedMessages = []
-function saveMessagesWhileInstantiatingDotnet(e) {
-    savedMessages.push(e);
-}
-self.addEventListener("message", saveMessagesWhileInstantiatingDotnet);
+﻿const params = new Proxy(new URLSearchParams(self.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+});
+let assembly = params.assembly;
 
 import { dotnet } from "../../_framework/dotnet.js"
 
@@ -24,16 +22,6 @@ instance.setModuleImports("boot.js", {
     registerOnMessage: (handler) => self.addEventListener("message", handler)
 });
 
-async function runWorker(e) {
-    await instance.runMainAndExit(`${e.data.namespace}.wasm`, [JSON.stringify(e.data)]);
-}
+self.postMessage("ready");
 
-// No longer save messages as we switch to handle them as they come in.
-self.removeEventListener("message", saveMessagesWhileInstantiatingDotnet);
-// Go through events that were saved and run the 
-for (const savedMessage of savedMessages) {
-    await runWorker(savedMessage);
-};
-
-// Now listen for all future messages and process them.
-self.addEventListener("message", runWorker);
+await instance.runMainAndExit(`${assembly}.wasm`, []);

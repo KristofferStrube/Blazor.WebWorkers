@@ -95,7 +95,7 @@ result = await dotNetWorker.ExecuteAsync(input);</code>
 </p>
 
 @code {
-    string input = "Hello World!";
+    string input = string.Join("", Enumerable.Range(0, 1_000_000 / 8).Select(_ => Guid.NewGuid().ToString()[..8]));
     int? result = null;
     double time;
     Worker? jsWorker;

@@ -1,7 +1,10 @@
-﻿using KristofferStrube.Blazor.WebIDL;
+﻿using KristofferStrube.Blazor.DOM;
+using KristofferStrube.Blazor.WebIDL;
 using KristofferStrube.Blazor.WebWorkers.Extensions;
+using KristofferStrube.Blazor.Window;
 using Microsoft.JSInterop;
 using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
@@ -21,12 +24,27 @@ public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : IJob<TInput,
     /// <param name="jSRuntime">An <see cref="IJSRuntime"/> instance.</param>
     public static new async Task<JobWorker<TInput, TOutput, TJob>> CreateAsync(IJSRuntime jSRuntime)
     {
+        string scriptUrl = "_content/KristofferStrube.Blazor.WebWorkers/KristofferStrube.Blazor.WebWorkers.JobWorker.js"
+            + $"?assembly={typeof(TJob).Assembly.GetName().Name}";
+
         await using IJSObjectReference helper = await jSRuntime.GetHelperAsync();
         IJSObjectReference jSInstance = await helper.InvokeAsync<IJSObjectReference>("constructWorker",
-            "_content/KristofferStrube.Blazor.WebWorkers/KristofferStrube.Blazor.WebWorkers.JobWorker.js",
-            new WorkerOptions() { Type = WorkerType.Module });
+            scriptUrl, new WorkerOptions() { Type = WorkerType.Module });
 
-        return new JobWorker<TInput, TOutput, TJob>(jSRuntime, jSInstance, new() { DisposesJSReference = true });
+        JobWorker<TInput, TOutput, TJob> worker = new(jSRuntime, jSInstance, new() { DisposesJSReference = true });
+
+        var tcs = new TaskCompletionSource<JobWorker<TInput, TOutput, TJob>>();
+
+        EventListener<MessageEvent> readyListener = default!;
+        readyListener = await EventListener<MessageEvent>.CreateAsync(jSRuntime, async e =>
+        {
+            await worker.RemoveOnMessageEventListenerAsync(readyListener);
+            await readyListener.DisposeAsync();
+            tcs.SetResult(worker);
+        });
+        await worker.AddOnMessageEventListenerAsync(readyListener);
+
+        return await tcs.Task;
     }
 
     /// <inheritdoc cref="Worker(IJSRuntime, IJSObjectReference, CreationOptions)"/>
