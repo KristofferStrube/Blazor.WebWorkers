@@ -85,7 +85,7 @@ public abstract class JsonJob<TInput, TOutput> : IJob<TInput, TOutput>
     /// This method is called from the Worker project to start listening for events
     /// </summary>
     [SupportedOSPlatform("browser")]
-    public async Task Start()
+    public async Task StartAsync()
     {
         Imports.RegisterOnMessage(message =>
         {
@@ -104,8 +104,8 @@ public abstract class JsonJob<TInput, TOutput> : IJob<TInput, TOutput>
             PostOutput(output, requestIdentifier);
         });
 
-        while (true)
-            await Task.Delay(100);
+        TaskCompletionSource tcs = new();
+        await tcs.Task;
     }
 
     /// <summary>
