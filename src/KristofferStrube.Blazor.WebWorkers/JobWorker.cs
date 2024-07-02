@@ -4,7 +4,6 @@ using KristofferStrube.Blazor.WebWorkers.Extensions;
 using KristofferStrube.Blazor.Window;
 using Microsoft.JSInterop;
 using System.Collections.Concurrent;
-using System.Text.Json;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
