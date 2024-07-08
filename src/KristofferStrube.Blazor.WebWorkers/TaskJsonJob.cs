@@ -37,21 +37,13 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
         return outputSerializedAndDeserialized;
     }
 
-    /// <summary>
-    /// How an input is transfered to the <see cref="JobWorker{TInput, TOutput, TJob}"/> for the <see cref="JsonJob{TInput, TOutput}"/>.
-    /// </summary>
-    public static async Task<TOutput> ExecuteAsync<TJob>(TInput input, Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks) where TJob : IJob<TInput, TOutput>
-    {
-        string requestIdentifier = Guid.NewGuid().ToString();
-        var tcs = new TaskCompletionSource<TOutput>();
-        pendingTasks[requestIdentifier] = tcs;
 
+    /// <inheritdoc/>
+    public static async Task<EventListener<MessageEvent>> InitializeAsync(Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks)
+    {
         EventListener<MessageEvent> eventListener = default!;
         eventListener = await EventListener<MessageEvent>.CreateAsync(worker.JSRuntime, async e =>
         {
-            await worker.RemoveOnMessageEventListenerAsync(eventListener);
-            await eventListener.DisposeAsync();
-
             JobResponse response = await e.GetDataAsync<JobResponse>();
             if (pendingTasks.Remove(response.RequestIdentifier, out TaskCompletionSource<TOutput>? successTaskCompletionSource))
             {
@@ -67,6 +59,18 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
         });
 
         await worker.AddOnMessageEventListenerAsync(eventListener);
+
+        return eventListener;
+    }
+
+    /// <summary>
+    /// How an input is transfered to the <see cref="JobWorker{TInput, TOutput, TJob}"/> for the <see cref="JsonJob{TInput, TOutput}"/>.
+    /// </summary>
+    public static async Task<TOutput> ExecuteAsync<TJob>(TInput input, Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks) where TJob : IJob<TInput, TOutput>
+    {
+        string requestIdentifier = Guid.NewGuid().ToString();
+        var tcs = new TaskCompletionSource<TOutput>();
+        pendingTasks[requestIdentifier] = tcs;
 
         string inputSerialized = input is string stringInput
             ? stringInput
@@ -95,7 +99,7 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
 
             if (inputSerialized is null) return;
 
-            TInput input = typeof(TInput) == typeof(string) && requestIdentifier is TInput stringInput
+            TInput input = typeof(TInput) == typeof(string) && inputSerialized is TInput stringInput
                 ? stringInput
                 : JsonSerializer.Deserialize<TInput>(inputSerialized)!;
 

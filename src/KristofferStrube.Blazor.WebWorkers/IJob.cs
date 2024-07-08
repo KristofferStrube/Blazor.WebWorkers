@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using KristofferStrube.Blazor.DOM;
+using KristofferStrube.Blazor.Window;
+using System.Collections.Concurrent;
 
 namespace KristofferStrube.Blazor.WebWorkers;
 
@@ -8,7 +10,14 @@ namespace KristofferStrube.Blazor.WebWorkers;
 public interface IJob<TInput, TOutput>
 {
     /// <summary>
-    /// How the job will send execute the job on the worker.
+    /// Initializes the job so that it is ready to be executed.
+    /// </summary>
+    /// <param name="worker">The worker that the job should be runned on.</param>
+    /// <param name="pendingTasks">The dictionary that manages which executions finishes.</param>
+    public abstract static Task<EventListener<MessageEvent>> InitializeAsync(Worker worker, ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks);
+
+    /// <summary>
+    /// Sends the <paramref name="input"/> to the <paramref name="worker"/>.
     /// </summary>
     /// <typeparam name="TJob">The type of the job.</typeparam>
     /// <param name="input">The input that the job should be executed with.</param>
