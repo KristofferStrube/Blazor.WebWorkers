@@ -22,7 +22,7 @@
 	<PropertyGroup>
 		<Product>Blazor.WebWorkers</Product>
 		<Version>0.1.0</Version>
-		<PackageVersion>0.1.0-alpha.4</PackageVersion>
+		<PackageVersion>0.1.0-alpha.6</PackageVersion>
 
 		<Authors>KristofferStrube</Authors>
 		<Copyright>Copyright © 2024 Kristoffer Strube and contributors. All rights reserved.</Copyright>

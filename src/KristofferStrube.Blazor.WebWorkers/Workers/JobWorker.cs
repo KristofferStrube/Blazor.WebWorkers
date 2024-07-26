@@ -13,10 +13,10 @@ namespace KristofferStrube.Blazor.WebWorkers;
 /// <typeparam name="TInput"></typeparam>
 /// <typeparam name="TOutput"></typeparam>
 /// <typeparam name="TJob"></typeparam>
-public class JobWorker<TInput, TOutput, TJob> : Worker 
-    where TJob : IJob<TInput, TOutput>
+public class JobWorker<TInput, TOutput, TJob> : Worker, IAsyncDisposable where TJob : IJob<TInput, TOutput>
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks = new();
+    private EventListener<MessageEvent>? messageListener;
 
     /// <summary>
     /// Creates a <see cref="JobWorker{TInput, TOutput, TJob}"/> that can execute some specific <typeparamref name="TJob"/> on a worker thread.
@@ -40,6 +40,8 @@ public class JobWorker<TInput, TOutput, TJob> : Worker
         {
             await worker.RemoveOnMessageEventListenerAsync(readyListener);
             await readyListener.DisposeAsync();
+
+            worker.messageListener = await TJob.InitializeAsync(worker, worker.pendingTasks);
             tcs.SetResult(worker);
         });
         await worker.AddOnMessageEventListenerAsync(readyListener);
@@ -60,5 +62,18 @@ public class JobWorker<TInput, TOutput, TJob> : Worker
     public async Task<TOutput> ExecuteAsync(TInput input)
     {
         return await TJob.ExecuteAsync<TJob>(input, this, pendingTasks);
+    }
+
+    /// <summary>
+    /// Diposes listener for events and the worker itself.
+    /// </summary>
+    public new async ValueTask DisposeAsync()
+    {
+        if (messageListener is not null)
+        {
+            await RemoveOnMessageEventListenerAsync(messageListener);
+            await messageListener.DisposeAsync();
+        }
+        await base.DisposeAsync();
     }
 }
