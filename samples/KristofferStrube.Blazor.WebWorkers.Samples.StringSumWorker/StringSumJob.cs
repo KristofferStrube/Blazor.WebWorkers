@@ -1,4 +1,4 @@
-﻿namespace KristofferStrube.Blazor.WebWorkers.StringSumWorker;
+﻿namespace KristofferStrube.Blazor.WebWorkers.Samples.StringSumWorker;
 
 public class StringSumJob : JsonJob<string, int>
 {
