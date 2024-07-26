@@ -87,7 +87,7 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
     [SupportedOSPlatform("browser")]
     public async Task StartAsync()
     {
-        Imports.RegisterOnMessage(async message =>
+        WorkerContext.RegisterOnMessage(async message =>
         {
             JSObject data = message.GetPropertyAsJSObject("data")!;
             string? inputSerialized = data.GetPropertyAsString("inputSerialized");
@@ -116,7 +116,7 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
     [SupportedOSPlatform("browser")]
     private void PostOutput(TOutput output, string requestIdentifier)
     {
-        JSObject outputObject = Imports.CreateObject();
+        JSObject outputObject = WorkerContext.CreateObject();
 
         outputObject.SetProperty("requestIdentifier", requestIdentifier);
         if (output is string stringOutput)
@@ -128,7 +128,7 @@ public abstract class TaskJsonJob<TInput, TOutput> : IJob<TInput, TOutput>
             outputObject.SetProperty("outputSerialized", JsonSerializer.Serialize(output));
         }
 
-        Imports.PostMessage(outputObject);
+        WorkerContext.PostMessage(outputObject);
     }
 
     /// <summary>

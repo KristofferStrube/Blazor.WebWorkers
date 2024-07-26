@@ -1,6 +1,6 @@
 ﻿@page "/PingPong"
 @using KristofferStrube.Blazor.DOM
-@using KristofferStrube.Blazor.WebWorkers.PongWorker
+@using KristofferStrube.Blazor.WebWorkers.Samples.PongWorker
 @using KristofferStrube.Blazor.Window
 @using System.Text.Json
 @using System.Diagnostics
@@ -27,31 +27,31 @@
 
     public async Task CreatePongWorker()
     {
-SlimWorker slimWorker = await SlimWorker.CreateAsync(
-    jSRuntime: JSRuntime,
-    assembly: typeof(AssemblyPongWorker).Assembly.GetName().Name!,
-    ["Argument1", "Argument2"]
-);
+        SlimWorker slimWorker = await SlimWorker.CreateAsync(
+            jSRuntime: JSRuntime,
+            assembly: typeof(AssemblyPongWorker).Assembly.GetName().Name!,
+            ["Argument1", "Argument2"]
+        );
 
-EventListener<MessageEvent> eventListener = default!;
-eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
-{
-    object? data = await e.Data.GetValueAsync();
-    switch (data)
-    {
-        case "ready":
-            Log("We are sending a ping!");
-            await slimWorker.PostMessageAsync("ping");
-            break;
-        case "pong":
-            Log("We received a pong!");
-            await slimWorker.RemoveOnMessageEventListenerAsync(eventListener);
-            await eventListener.DisposeAsync();
-            await slimWorker.DisposeAsync();
-            break;
-    }
-});
-await slimWorker.AddOnMessageEventListenerAsync(eventListener);
+        EventListener<MessageEvent> eventListener = default!;
+        eventListener = await EventListener<MessageEvent>.CreateAsync(JSRuntime, async e =>
+        {
+            object? data = await e.Data.GetValueAsync();
+            switch (data)
+            {
+                case "ready":
+                    Log("We are sending a ping!");
+                    await slimWorker.PostMessageAsync("ping");
+                    break;
+                case "pong":
+                    Log("We received a pong!");
+                    await slimWorker.RemoveOnMessageEventListenerAsync(eventListener);
+                    await eventListener.DisposeAsync();
+                    await slimWorker.DisposeAsync();
+                    break;
+            }
+        });
+        await slimWorker.AddOnMessageEventListenerAsync(eventListener);
     }
 
     private void Log(string message)

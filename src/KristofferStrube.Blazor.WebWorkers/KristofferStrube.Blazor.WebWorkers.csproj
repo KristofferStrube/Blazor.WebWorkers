@@ -1,43 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Title>Blazor Web Workers wrapper</Title>
-    <Description>Web Workers wrapper implementation for Blazor.</Description>
-    <PackageId>KristofferStrube.Blazor.WebWorkers</PackageId>
-    <PackageTags>Blazor;Web;Workers;Worker;Job;Threading;Wasm;Wrapper;JSInterop</PackageTags>
-    <RepositoryUrl>https://github.com/KristofferStrube/Blazor.WebAudio</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageVersion>0.1.0-alpha.4</PackageVersion>
-    <Authors>Kristoffer Strube</Authors>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<DocumentationFile>$(DocumentationFile)\$(AssemblyName).xml</DocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\..\docs\icon.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
 
-  <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
+	<PropertyGroup>
+		<PackageId>KristofferStrube.Blazor.WebWorkers</PackageId>
+		<Title>Blazor Web Workers wrapper</Title>
+		<Description>Web Workers wrapper implementation for Blazor.</Description>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="KristofferStrube.Blazor.DOM" Version="0.2.2" />
-    <PackageReference Include="KristofferStrube.Blazor.Window" Version="0.1.0-alpha.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="KristofferStrube.Blazor.DOM" Version="0.*" />
+		<PackageReference Include="KristofferStrube.Blazor.Window" Version="0.*-*" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\docs\icon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>

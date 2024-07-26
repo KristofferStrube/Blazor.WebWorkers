@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using KristofferStrube.Blazor.WebWorkers.WasmExample;
+using KristofferStrube.Blazor.WebWorkers.Samples.WasmExample;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

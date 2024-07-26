@@ -13,7 +13,8 @@ namespace KristofferStrube.Blazor.WebWorkers;
 /// <typeparam name="TInput"></typeparam>
 /// <typeparam name="TOutput"></typeparam>
 /// <typeparam name="TJob"></typeparam>
-public class JobWorker<TInput, TOutput, TJob> : Worker where TJob : IJob<TInput, TOutput>
+public class JobWorker<TInput, TOutput, TJob> : Worker 
+    where TJob : IJob<TInput, TOutput>
 {
     private readonly ConcurrentDictionary<string, TaskCompletionSource<TOutput>> pendingTasks = new();
 

@@ -6,9 +6,13 @@ namespace KristofferStrube.Blazor.WebWorkers;
 /// <summary>
 /// Methods that help us making JS Interop.
 /// </summary>
+/// <remarks>
+/// 
+/// </remarks>
 [SupportedOSPlatform("browser")]
-public partial class Imports
+public partial class WorkerContext
 {
+
     /// <summary>
     /// Creates a rented object that should be released again at some point by being parsed to <see cref="DisposeObject(JSObject)"/>
     /// </summary>
@@ -42,4 +46,5 @@ public partial class Imports
     /// <param name="handler"></param>
     [JSImport("registerOnMessage", "boot.js")]
     public static partial void RegisterOnMessage([JSMarshalAs<JSType.Function<JSType.Object>>] Action<JSObject> handler);
+
 }
