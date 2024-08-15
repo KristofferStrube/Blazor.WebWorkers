@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace KristofferStrube.Blazor.WebWorkers.Converters;
 
+
+/// <remarks>
+/// RWM: <see langword="this"/>is only necessary if you intend to make it compatible with .NET 7.0 or earlier.
+/// </remarks>
 internal class WorkerTypeConverter : JsonConverter<WorkerType>
 {
     public override WorkerType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

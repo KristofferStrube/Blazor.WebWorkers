@@ -4,28 +4,28 @@ using System.Text.Json;
 namespace KristofferStrube.Blazor.WebWorkers;
 
 /// <summary>
-/// A job that uses JSON as its serialization mechanism for the input and output. This is different from a <see cref="JsonJob{TInput, TOutput}"/> as this returns task.
+/// A job that uses JSON as its serialization mechanism for the input and output.
 /// </summary>
 /// <typeparam name="TInput">The input type for the job.</typeparam>
 /// <typeparam name="TOutput">The output type for the job.</typeparam>
-public abstract class TaskJsonJob<TInput, TOutput> : BaseJsonJob<TInput, TOutput>
+public abstract class JsonJob<TInput, TOutput> : BaseJsonJob<TInput, TOutput>
 {
     /// <summary>
     /// The actual work being done by the job. This will be run when the job is executed.
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    public abstract Task<TOutput> Work(TInput input);
+    public abstract TOutput Work(TInput input);
 
     /// <summary>
     /// To test the job, you can execute the job from Blazor. This will not use a worker at all.
     /// This method can be used to ensure that your inputs and outputs can be serialized/deserialized correctly.
     /// </summary>
-    public async Task<TOutput> ExecuteWithoutUsingWorker(TInput input)
+    public TOutput ExecuteWithoutUsingWorker(TInput input)
     {
         TInput inputSerializedAndDeserialized = JsonSerializer.Deserialize<TInput>(JsonSerializer.Serialize(input))!;
 
-        TOutput? output = await Work(inputSerializedAndDeserialized);
+        TOutput? output = Work(inputSerializedAndDeserialized);
 
         TOutput outputSerializedAndDeserialized = JsonSerializer.Deserialize<TOutput>(JsonSerializer.Serialize(output))!;
 
@@ -38,11 +38,11 @@ public abstract class TaskJsonJob<TInput, TOutput> : BaseJsonJob<TInput, TOutput
     [SupportedOSPlatform("browser")]
     public async Task StartAsync()
     {
-        Imports.RegisterOnMessage(async message =>
+        WorkerContext.RegisterOnMessage(message =>
         {
             (TInput input, string requestIdentifier) = GetInputAndRequestIdentifier(message);
 
-            TOutput output = await Work(input);
+            TOutput output = Work(input);
 
             PostOutput(output, requestIdentifier);
         });
