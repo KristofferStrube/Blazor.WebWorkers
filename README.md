@@ -167,6 +167,7 @@ The library uses the following other packages to support its features:
 # Related articles
 This repository was built with inspiration and help from the following series of articles:
 
+- [Multithreading in Blazor WASM using Web Workers](https://kristoffer-strube.dk/post/multithreading-in-blazor-wasm-using-web-workers/)
 - [Use .NET from any JavaScript app in .NET 7](https://devblogs.microsoft.com/dotnet/use-net-7-from-any-javascript-app-in-net-7/)
 - [Typed exceptions for JSInterop in Blazor](https://kristoffer-strube.dk/post/typed-exceptions-for-jsinterop-in-blazor/)
 - [Blazor WASM 404 error and fix for GitHub Pages](https://blog.elmah.io/blazor-wasm-404-error-and-fix-for-github-pages/)
