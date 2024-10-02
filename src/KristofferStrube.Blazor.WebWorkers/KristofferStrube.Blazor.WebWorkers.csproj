@@ -9,10 +9,10 @@
     <Description>Web Workers wrapper implementation for Blazor.</Description>
     <PackageId>KristofferStrube.Blazor.WebWorkers</PackageId>
     <PackageTags>Blazor;Web;Workers;Worker;Job;Threading;Wasm;Wrapper;JSInterop</PackageTags>
-    <RepositoryUrl>https://github.com/KristofferStrube/Blazor.WebAudio</RepositoryUrl>
+    <RepositoryUrl>https://github.com/KristofferStrube/Blazor.WebWorkers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageVersion>0.1.0-alpha.6</PackageVersion>
+    <PackageVersion>0.1.0-alpha.7</PackageVersion>
     <Authors>Kristoffer Strube</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
